@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'https://unpkg.com/three@0.179.1/examples/jsm/controls/PointerLockControls.js';
-import { levels } from './levels.js';
+import { loadLevelData, availableLevels } from './levels.js';
 
 // Create the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -14,9 +14,10 @@ const controls = new PointerLockControls(camera, document.body);
 
 let walls = []; // Array to store wall objects for collision detection
 let enemy = null; // Variable to store the enemy object
+let launcher = null; // Declare launcher globally
 
 // Function to load a level
-function loadLevel(levelName) {
+async function loadLevel(levelName) {
     // Clear existing objects from the scene (except camera and controls)
     while(scene.children.length > 0){
         const object = scene.children[0];
@@ -27,10 +28,21 @@ function loadLevel(levelName) {
     walls.length = 0; // Clear walls array
     enemy = null; // Clear enemy object
 
-    const level = levels[levelName];
+    const level = await loadLevelData(levelName);
+    if (!level) {
+        console.error(`Level '${levelName}' not found or could not be loaded.`);
+        return;
+    }
 
     // Set player start position
     controls.object.position.set(level.playerStart.x, level.playerStart.y, level.playerStart.z);
+
+    // Add the launcher
+    const launcherGeometry = new THREE.BoxGeometry(0.5, 0.5, 2); // Example size
+    const launcherMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
+    launcher = new THREE.Mesh(launcherGeometry, launcherMaterial);
+    launcher.position.set(0.8, -0.6, -2); // Position relative to camera (right, down, forward)
+    camera.add(launcher); // Attach launcher to camera
 
     const textureLoader = new THREE.TextureLoader();
 
@@ -82,14 +94,26 @@ function loadLevel(levelName) {
     });
 }
 
-// Load the initial level
-loadLevel('level1');
+
 
 const blocker = document.getElementById('blocker');
 const instructions = document.getElementById('instructions');
+const levelSelect = document.getElementById('level-select');
+const loadLevelButton = document.getElementById('load-level-button');
 
-instructions.addEventListener('click', function () {
-    controls.lock();
+// Populate level dropdown
+availableLevels.forEach(levelName => {
+    const option = document.createElement('option');
+    option.value = levelName;
+    option.textContent = levelName;
+    levelSelect.appendChild(option);
+});
+
+// Load selected level on button click
+loadLevelButton.addEventListener('click', () => {
+    const selectedLevel = levelSelect.value;
+    loadLevel(selectedLevel);
+    controls.lock(); // Lock pointer and hide instructions after loading
 });
 
 controls.addEventListener('lock', function () {
@@ -102,14 +126,7 @@ controls.addEventListener('unlock', function () {
     instructions.style.display = '';
 });
 
-scene.add(controls.object);
 
-// Add the launcher
-const launcherGeometry = new THREE.BoxGeometry(0.5, 0.5, 2); // Example size
-const launcherMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
-const launcher = new THREE.Mesh(launcherGeometry, launcherMaterial);
-launcher.position.set(0.8, -0.6, -2); // Position relative to camera (right, down, forward)
-camera.add(launcher); // Attach launcher to camera
 
 // Movement variables
 let moveForward = false;
@@ -131,13 +148,13 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 document.addEventListener('mousedown', function (event) {
-    if (controls.isLocked) {
+    if (controls.isLocked && launcher) { // Check if launcher exists
         mouseDownTime = Date.now();
     }
 });
 
 document.addEventListener('mouseup', function (event) {
-    if (controls.isLocked && mouseDownTime > 0) {
+    if (controls.isLocked && mouseDownTime > 0 && launcher) { // Check if launcher exists
         const chargeDuration = Date.now() - mouseDownTime;
         mouseDownTime = 0; // Reset for next shot
 
@@ -182,7 +199,8 @@ document.addEventListener('mouseup', function (event) {
         const intersects = raycaster.intersectObjects(scene.children);
 
         for (let i = 0; i < intersects.length; i++) {
-            if (intersects[i].object === enemy) {
+            // Check if enemy exists before comparing
+            if (enemy && intersects[i].object === enemy) {
                 scene.remove(enemy);
                 console.log('Enemy hit!');
                 break;
@@ -234,6 +252,7 @@ document.addEventListener('keyup', function (event) {
 const animate = () => {
     requestAnimationFrame(animate);
 
+    console.log('Animating...'); // Debugging line
     const delta = 0.016; // Approximate time per frame (60 FPS)
 
     velocity.x -= velocity.x * 10.0 * delta;
