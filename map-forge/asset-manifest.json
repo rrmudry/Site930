@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Site930/map-forge/static/css/main.d94b6afb.css",
+    "main.js": "/Site930/map-forge/static/js/main.c5e2b901.js",
+    "static/js/453.fac226c7.chunk.js": "/Site930/map-forge/static/js/453.fac226c7.chunk.js",
+    "index.html": "/Site930/map-forge/index.html",
+    "main.d94b6afb.css.map": "/Site930/map-forge/static/css/main.d94b6afb.css.map",
+    "main.c5e2b901.js.map": "/Site930/map-forge/static/js/main.c5e2b901.js.map",
+    "453.fac226c7.chunk.js.map": "/Site930/map-forge/static/js/453.fac226c7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.d94b6afb.css",
+    "static/js/main.c5e2b901.js"
+  ]
+}
