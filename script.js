@@ -38,6 +38,10 @@ async function loadLevel(levelName) {
     controls.object.position.set(level.playerStart.x, level.playerStart.y, level.playerStart.z);
 
     // Add the launcher
+    // Remove any existing launcher to prevent duplicates when reloading levels
+    if (launcher) {
+        camera.remove(launcher);
+    }
     const launcherGeometry = new THREE.BoxGeometry(0.5, 0.5, 2); // Example size
     const launcherMaterial = new THREE.MeshBasicMaterial({ color: 0x555555 });
     launcher = new THREE.Mesh(launcherGeometry, launcherMaterial);
@@ -252,7 +256,6 @@ document.addEventListener('keyup', function (event) {
 const animate = () => {
     requestAnimationFrame(animate);
 
-    console.log('Animating...'); // Debugging line
     const delta = 0.016; // Approximate time per frame (60 FPS)
 
     velocity.x -= velocity.x * 10.0 * delta;
