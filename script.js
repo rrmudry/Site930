@@ -19,8 +19,8 @@ let launcher = null; // Declare launcher globally
 // Function to load a level
 async function loadLevel(levelName) {
     // Clear existing objects from the scene (except camera and controls)
-    while(scene.children.length > 0){
-        const object = scene.children[0];
+    for (let i = scene.children.length - 1; i >= 0; i--) {
+        const object = scene.children[i];
         if (object !== camera && object !== controls.object) {
             scene.remove(object);
         }
@@ -336,3 +336,13 @@ const animate = () => {
 };
 
 animate();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Add the camera to the scene before loading the level
+scene.add(camera);
